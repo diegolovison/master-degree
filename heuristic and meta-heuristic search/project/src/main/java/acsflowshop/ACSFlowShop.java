@@ -61,7 +61,7 @@ public class ACSFlowShop {
         int globalBestValue = Integer.MAX_VALUE;
 
         // Loop at this level each loop is called an iteration
-        for (int interationCount=0; interationCount<iteration; interationCount++) {
+        for (int iterationCount=0; iterationCount<iteration; iterationCount++) {
 
             // Loop at this level each loop is called a step
             for (int antCount=0; antCount<ant; antCount++) {
@@ -75,11 +75,12 @@ public class ACSFlowShop {
 
             if (cmax < globalBestValue) {
                 globalBestValue = cmax;
+                System.out.println(String.format(" > iteration #{(%d)}, best=#{%d}, lowerbound=#{%d}", iterationCount, globalBestValue, lowerBound));
             }
 
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
-            increasePheromone(cmax);
+            globalUpdatePheromone(cmax);
             if (globalBestValue == lowerBound) break;
         }
 
@@ -109,19 +110,14 @@ public class ACSFlowShop {
         return machinesTime[numberOfMachines - 1];
     }
 
-    private void increasePheromone(int cmax) {
+    private void globalUpdatePheromone(int cmax) {
 
         for (int i=0; i<numberOfJobs; i++) {
             for (int j=0; j<numberOfJobs; j++) {
 
-                increasePheromone(i, j, cmax);
+                t[i][j] = ((1.0 - a) * t[i][j]) + ((a * pheromoneDelta(i, j, cmax)));
             }
         }
-    }
-
-    private void increasePheromone(int i, int j, int cmax) {
-
-        t[i][j] = ((1 - a) * t[i][j]) + ((a * pheromoneDelta(i, j, cmax)));
     }
 
     public boolean belongsGlobalBestTour(double[][]t, int i, int j) {
@@ -129,8 +125,6 @@ public class ACSFlowShop {
         double pheromone = t[i][j];
 
         for (int u=0; u<numberOfJobs; u++) {
-
-            if (j == u) continue;
 
             if (t[i][u] > pheromone) {
                 return false;
@@ -159,13 +153,16 @@ public class ACSFlowShop {
 
             schedule.add(j);
 
-            decreasePheromone(i, j);
+            localUpdatePheromone(i, j);
         }
     }
 
-    private void decreasePheromone(int i, int j) {
+    private void localUpdatePheromone(int i, int j) {
 
-        t[i][j] = ((1 - p) * t[i][j]) + (p * t0);
+        double value = ((0.98 - p) * t[i][j]) + (p * t0);
+
+        t[i][j] = value;
+        t[j][i] = value;
     }
 
     private int calculateCMax() {
@@ -175,19 +172,13 @@ public class ACSFlowShop {
 
         for (int i=0; i<numberOfJobs; i++) {
 
-            double max = 0;
-
+            double sum = 0;
             for (int j=0; j<numberOfJobs; j++) {
-
-                double pheromone = t[i][j];
-
-                if (pheromone > max) {
-                    max = pheromone;
-                }
+                sum += t[i][j];
             }
 
             schedule[i] = i;
-            data[i] = max;
+            data[i] = sum;
         }
 
         Arrays.sort(schedule, new Comparator<Integer>() {
@@ -218,7 +209,6 @@ public class ACSFlowShop {
 
         for (int u=0; u<numberOfJobs; u++) {
 
-            if (i == u) continue;
             if (!isFeasible(schedule, u)) continue;
 
             double value = transitionValue(i, u);
@@ -243,12 +233,11 @@ public class ACSFlowShop {
 
         for (int j = 0; j < numberOfJobs; j++) {
 
-            if (i == j) continue;
             if (!isFeasible(schedule, j)) continue;
 
             double dividend = transitionValue(i, j);
 
-            double divisor = 0;
+            Double divisor = 0.0;
 
             for (int u = 0; u < numberOfJobs; u++) {
 

@@ -37,7 +37,7 @@ public class TestPaper {
 
         Map<Integer, List<ACSFlowShopResult>> results = new HashMap<Integer, List<ACSFlowShopResult>>();
 
-        //for (int count=1; count<=5; count++) {
+        for (int count=1; count<=5; count++) {
 
             for (TaillardInstance instance : instances) {
 
@@ -50,7 +50,7 @@ public class TestPaper {
 
                 addResult(1, results, new ACSFlowShopResult(cost, instance.getLowerBound(), duration));
             }
-        //}
+        }
 
         List<ACSFlowShopResult> bestTrial = getBestTrial(results);
 
