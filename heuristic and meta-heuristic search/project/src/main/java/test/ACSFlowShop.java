@@ -14,6 +14,9 @@ public class ACSFlowShop {
     private double q0;
     private int ub;
     private int lowerBound;
+    private int t0;
+
+    private double[][] solution = null;
 
     // Initialize the pheromone trail
     // set parameters
@@ -32,13 +35,13 @@ public class ACSFlowShop {
         this.q0 = q0;
         this.ub = instance.getUpperBound();
         this.lowerBound = instance.getLowerBound();
+
+        this.solution = new double[numberOfMachines][numberOfJobs];
     }
 
     public int solve() {
 
         int cmax = 0;
-        double[][] pheromone = null;
-        int[][] solution = null;
 
         // Loop at this level each loop is called an iteration
         for (int interationCount=0; interationCount<iteration; interationCount++) {
@@ -49,23 +52,20 @@ public class ACSFlowShop {
                 // Each ant repeatedly applies state transition rule to select the
                 // next node until a tour is constructed
                 int[][] path = pathSelection();
-
-                decreasePheromone(path);
             }
 
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
-            increasePheromone(solution);
+            increasePheromone();
 
-            cmax = calculateCMax(solution);
+            cmax = calculateCMax();
             if (cmax == lowerBound) break;
         }
 
         return cmax;
     }
 
-    private void increasePheromone(int[][] solution) {
-
+    private void increasePheromone() {
 
     }
 
@@ -79,11 +79,12 @@ public class ACSFlowShop {
         return path;
     }
 
-    private void decreasePheromone(int[][] path) {
+    private void decreasePheromone(int i, int j) {
 
+        solution[i][j] = ((1 - p) * solution[i][j]) + (p * t0);
     }
 
-    private int calculateCMax(int[][] path) {
+    private int calculateCMax() {
 
         return 0;
     }

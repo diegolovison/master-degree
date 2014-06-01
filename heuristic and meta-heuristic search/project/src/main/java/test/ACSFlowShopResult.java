@@ -15,19 +15,11 @@ public class ACSFlowShopResult {
         this.lowerBound = lowerBound;
     }
 
-    public int getCost() {
-        return cost;
-    }
-
-    public int getLowerBound() {
-        return lowerBound;
-    }
-
     public long getTime() {
         return time;
     }
 
-    public int getDiff() {
+    public int getQuality() {
         return cost - lowerBound;
     }
 }

@@ -57,18 +57,18 @@ public class TestPaper {
     private void printBest(List<ACSFlowShopResult> bestTrial, String fileName) {
 
         long totalTime = 0;
-        int totalCost = 0;
+        int totalQuality = 0;
 
         for (ACSFlowShopResult result : bestTrial) {
 
             totalTime += result.getTime();
-            totalCost += result.getCost();
+            totalQuality += result.getQuality();
         }
 
         double averageTime = totalTime / bestTrial.size();
-        double averageCost = totalCost / bestTrial.size();
+        double averageQuality = totalQuality / bestTrial.size();
 
-        System.out.println(String.format("%s %.2f %.2f", fileName, averageCost, averageTime));
+        System.out.println(String.format("%s %.2f %.2f", fileName.split("\\.")[0], averageQuality, averageTime));
     }
 
     private void addResult(int count, Map<Integer, List<ACSFlowShopResult>> results, ACSFlowShopResult result) {
@@ -91,7 +91,7 @@ public class TestPaper {
             List<ACSFlowShopResult> trial = results.get(count);
 
             for (ACSFlowShopResult result : trial) {
-                total += result.getDiff();
+                total += result.getQuality();
             }
 
             double average = total / trial.size();
