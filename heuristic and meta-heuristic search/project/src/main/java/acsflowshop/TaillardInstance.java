@@ -1,4 +1,4 @@
-package test;
+package acsflowshop;
 
 public class TaillardInstance {
 
