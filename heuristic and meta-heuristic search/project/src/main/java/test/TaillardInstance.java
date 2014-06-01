@@ -1,8 +1,5 @@
 package test;
 
-/**
- * Created by diego on 31/05/2014.
- */
 public class TaillardInstance {
 
     private int numberOfJobs;

@@ -1,8 +1,6 @@
 package test;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +8,7 @@ public class TaillardParser {
 
     private static final String INSTANCE_SEPARATOR = "number of jobs";
 
-    private List<TaillardInstance> parse(String filePath) {
+    public static List<TaillardInstance> parse(String fileName) {
 
         List<TaillardInstance> instances = new ArrayList<TaillardInstance>();
 
@@ -18,11 +16,14 @@ public class TaillardParser {
         int[][] matrix;
         String line;
         String[] splitted;
+
         BufferedReader bufferedReader = null;
+        InputStream input = null;
 
         try {
 
-            bufferedReader = new BufferedReader(new FileReader(filePath));
+            input = TaillardParser.class.getResourceAsStream("/"+ fileName);
+            bufferedReader = new BufferedReader(new InputStreamReader(input));
 
             while ((line = bufferedReader.readLine()) != null) {
 
@@ -64,7 +65,7 @@ public class TaillardParser {
 
         } catch (IOException e) {
 
-            throw new IllegalStateException("Impossible to parse: " + filePath, e);
+            throw new IllegalStateException("Impossible to parse: " + fileName, e);
 
         } finally {
 
@@ -72,7 +73,15 @@ public class TaillardParser {
                 try {
                     bufferedReader.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+
+                }
+            }
+
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+
                 }
             }
         }

@@ -3,21 +3,42 @@ package test;
 public class ACSFlowShop {
 
     private int[][] instance;
-    private int iteration;
-    private int ant;
     private int numberOfJobs;
     private int numberOfMachines;
 
-    private double[][] pheromone;
-    private int[][] solution;
+    private int iteration;
+    private int ant;
+    private double alpha;
+    private double beta;
+    private double p;
+    private double q0;
+    private int ub;
+    private int lowerBound;
 
     // Initialize the pheromone trail
     // set parameters
-    public ACSFlowShop() {
+    public ACSFlowShop(TaillardInstance instance, int iteration, int ant, double alpha, double beta,
+                       double p, double q0) {
 
+        this.instance = instance.getMatrix();
+        this.numberOfJobs = instance.getNumberOfJobs();
+        this.numberOfMachines = instance.getNumberOfMachines();
+
+        this.iteration = iteration;
+        this.ant = ant;
+        this.alpha = alpha;
+        this.beta = beta;
+        this.p = p;
+        this.q0 = q0;
+        this.ub = instance.getUpperBound();
+        this.lowerBound = instance.getLowerBound();
     }
 
-    public void run() {
+    public int solve() {
+
+        int cmax = 0;
+        double[][] pheromone = null;
+        int[][] solution = null;
 
         // Loop at this level each loop is called an iteration
         for (int interationCount=0; interationCount<iteration; interationCount++) {
@@ -35,8 +56,12 @@ public class ACSFlowShop {
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
             increasePheromone(solution);
+
+            cmax = calculateCMax(solution);
+            if (cmax == lowerBound) break;
         }
 
+        return cmax;
     }
 
     private void increasePheromone(int[][] solution) {
@@ -58,8 +83,9 @@ public class ACSFlowShop {
 
     }
 
-    private void calculateCMax(int[][] path) {
+    private int calculateCMax(int[][] path) {
 
+        return 0;
     }
 
     private void findOtherNodes(int[][] path) {
