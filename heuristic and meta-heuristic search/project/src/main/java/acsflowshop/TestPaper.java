@@ -14,8 +14,11 @@ public class TestPaper {
 
     public void execute() {
 
-        int[] jobs = {20, 50, 100, 200, 500};
-        int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
+        //int[] jobs = {20, 50, 100, 200, 500};
+        //int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
+
+        int[] jobs = {20};
+        int[][] machines = {{5}};
 
         for (int i=0; i<jobs.length; i++) {
 
@@ -34,7 +37,7 @@ public class TestPaper {
 
         Map<Integer, List<ACSFlowShopResult>> results = new HashMap<Integer, List<ACSFlowShopResult>>();
 
-        for (int count=1; count<=5; count++) {
+        //for (int count=1; count<=5; count++) {
 
             for (TaillardInstance instance : instances) {
 
@@ -45,19 +48,19 @@ public class TestPaper {
 
                 long duration = System.currentTimeMillis() - initTime;
 
-                addResult(count, results, new ACSFlowShopResult(cost, instance.getLowerBound(), duration));
+                addResult(1, results, new ACSFlowShopResult(cost, instance.getLowerBound(), duration));
             }
-        }
+        //}
 
         List<ACSFlowShopResult> bestTrial = getBestTrial(results);
 
-        printBest(bestTrial, fileName);
+        print(bestTrial, fileName);
     }
 
-    private void printBest(List<ACSFlowShopResult> bestTrial, String fileName) {
+    private void print(List<ACSFlowShopResult> bestTrial, String fileName) {
 
         long totalTime = 0;
-        int totalQuality = 0;
+        double totalQuality = 0;
 
         for (ACSFlowShopResult result : bestTrial) {
 
@@ -87,7 +90,7 @@ public class TestPaper {
 
         for (int count : results.keySet()) {
 
-            int total = 0;
+            double total = 0;
             List<ACSFlowShopResult> trial = results.get(count);
 
             for (ACSFlowShopResult result : trial) {

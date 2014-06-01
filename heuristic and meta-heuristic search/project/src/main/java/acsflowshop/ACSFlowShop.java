@@ -1,48 +1,59 @@
 package acsflowshop;
 
+import java.util.*;
+
 public class ACSFlowShop {
 
+    private static final Random random = new Random();
+
     private int[][] instance;
+    private double[][] path;
     private int numberOfJobs;
     private int numberOfMachines;
 
     private int iteration;
     private int ant;
     private double a;
-    private double beta;
+    private double B;
     private double p;
     private double q0;
-    private int ub;
     private int lowerBound;
-    private int t0;
+    private double t0;
 
-    private double[][] t = null;
+    private double[][] t;
 
-    public ACSFlowShop(int numberOfJobs, int numberOfMachines) {
+    public ACSFlowShop(int numberOfMachines, int numberOfJobs) {
 
-        this.numberOfJobs = numberOfJobs;
         this.numberOfMachines = numberOfMachines;
+        this.numberOfJobs = numberOfJobs;
+
+        this.t = new double[numberOfJobs][numberOfJobs];
     }
 
     // Initialize the pheromone trail
     // set parameters
-    public ACSFlowShop(TaillardInstance instance, int iteration, int ant, double a, double beta,
+    public ACSFlowShop(TaillardInstance instance, int iteration, int ant, double a, double B,
                        double p, double q0) {
 
-        this(instance.getNumberOfJobs(), instance.getNumberOfMachines());
+        this(instance.getNumberOfMachines(), instance.getNumberOfJobs());
 
-        this.instance = instance.getMatrix();
+        this.instance = instance.getInstance();
+        this.path = instance.getPath();
 
         this.iteration = iteration;
         this.ant = ant;
         this.a = a;
-        this.beta = beta;
+        this.B = B;
         this.p = p;
         this.q0 = q0;
-        this.ub = instance.getUpperBound();
+        this.t0 = Math.pow((numberOfJobs * instance.getUpperBound()), -1);
         this.lowerBound = instance.getLowerBound();
 
-        this.t = new double[numberOfMachines][numberOfJobs];
+        for (int i=0; i<numberOfJobs; i++) {
+            for (int j=0; j<numberOfJobs; j++) {
+                t[i][j] = t0;
+            }
+        }
     }
 
     public int solve() {
@@ -57,28 +68,50 @@ public class ACSFlowShop {
 
                 // Each ant repeatedly applies state transition rule to select the
                 // next node until a tour is constructed
-                int[][] path = pathSelection();
+                walk();
             }
 
             int cmax = calculateCMax();
-
-            // Apply global updating rule to increase pheromone on edges of the
-            // current best tour and decrease pheromone on other edges
-            increasePheromone(cmax);
 
             if (cmax < globalBestValue) {
                 globalBestValue = cmax;
             }
 
+            // Apply global updating rule to increase pheromone on edges of the
+            // current best tour and decrease pheromone on other edges
+            increasePheromone(cmax);
             if (globalBestValue == lowerBound) break;
         }
 
         return globalBestValue;
     }
 
+    public int getMakeSpan(Integer[] schedule, int[][] jobInfo) {
+
+        int[] machinesTime = new int[numberOfMachines];
+        int time;
+
+        for (int job : schedule) {
+            for (int i = 0; i < numberOfMachines; i++) {
+                time = jobInfo[i][job];
+                if (i == 0) {
+                    machinesTime[i] = machinesTime[i] + time;
+                } else {
+                    if (machinesTime[i] > machinesTime[i - 1]) {
+                        machinesTime[i] = machinesTime[i] + time;
+                    } else {
+                        machinesTime[i] = machinesTime[i - 1] + time;
+                    }
+                }
+            }
+        }
+
+        return machinesTime[numberOfMachines - 1];
+    }
+
     private void increasePheromone(int cmax) {
 
-        for (int i=0; i<numberOfMachines; i++) {
+        for (int i=0; i<numberOfJobs; i++) {
             for (int j=0; j<numberOfJobs; j++) {
 
                 increasePheromone(i, j, cmax);
@@ -93,18 +126,18 @@ public class ACSFlowShop {
 
     public boolean belongsGlobalBestTour(double[][]t, int i, int j) {
 
-        int bestMachine = -1;
-        double bestPheromone = Double.MIN_VALUE;
+        double pheromone = t[i][j];
 
-        for (int z=0; z<numberOfMachines; z++) {
+        for (int u=0; u<numberOfJobs; u++) {
 
-            if (t[z][j] > bestPheromone) {
-                bestPheromone = t[z][j];
-                bestMachine = z;
+            if (j == u) continue;
+
+            if (t[i][u] > pheromone) {
+                return false;
             }
         }
 
-        return bestMachine == i;
+        return true;
     }
 
     private double pheromoneDelta(int i, int j, int cmax) {
@@ -116,14 +149,18 @@ public class ACSFlowShop {
         }
     }
 
-    private int[][] pathSelection() {
+    private void walk() {
 
-        int[][] path = new int[numberOfMachines][numberOfJobs];
+        List<Integer> schedule = new ArrayList<Integer>(numberOfJobs);
 
-        findFirstNode(path);
-        findOtherNodes(path);
+        for (int i=0; i<numberOfJobs; i++) {
 
-        return path;
+            int j = getNext(schedule, i);
+
+            schedule.add(j);
+
+            decreasePheromone(i, j);
+        }
     }
 
     private void decreasePheromone(int i, int j) {
@@ -133,14 +170,114 @@ public class ACSFlowShop {
 
     private int calculateCMax() {
 
-        return 0;
+        Integer[] schedule = new Integer[numberOfJobs];
+        final Double[] data = new Double[numberOfJobs];
+
+        for (int i=0; i<numberOfJobs; i++) {
+
+            double max = 0;
+
+            for (int j=0; j<numberOfJobs; j++) {
+
+                double pheromone = t[i][j];
+
+                if (pheromone > max) {
+                    max = pheromone;
+                }
+            }
+
+            schedule[i] = i;
+            data[i] = max;
+        }
+
+        Arrays.sort(schedule, new Comparator<Integer>() {
+            @Override
+            public int compare(final Integer o1, final Integer o2) {
+                return Double.compare(data[o1], data[o2]);
+            }
+        });
+
+        int makespan = getMakeSpan(schedule, instance);
+
+        return makespan;
     }
 
-    private void findOtherNodes(int[][] path) {
+    private int getNext(List<Integer> schedule, int i) {
 
+        if (q() <= q0) {
+            return transitionRule(schedule, i);
+        } else {
+            return randomProportionalRule(schedule, i);
+        }
     }
 
-    private void findFirstNode(int[][] path) {
+    private int transitionRule(List<Integer> schedule, int i) {
 
+        double max = -1;
+        int index = -1;
+
+        for (int u=0; u<numberOfJobs; u++) {
+
+            if (i == u) continue;
+            if (!isFeasible(schedule, u)) continue;
+
+            double value = transitionValue(i, u);
+
+            if (value > max) {
+                max = value;
+                index = u;
+            }
+        }
+
+        return index;
+    }
+
+    private double transitionValue(int i, int u) {
+        return t[i][u] * Math.pow(path[i][u], B);
+    }
+
+    private int randomProportionalRule(List<Integer> schedule, int i) {
+
+        double max = -1;
+        int index = -1;
+
+        for (int j = 0; j < numberOfJobs; j++) {
+
+            if (i == j) continue;
+            if (!isFeasible(schedule, j)) continue;
+
+            double dividend = transitionValue(i, j);
+
+            double divisor = 0;
+
+            for (int u = 0; u < numberOfJobs; u++) {
+
+                if (isFeasible(schedule, u)) {
+                    divisor += transitionValue(i, u);
+                }
+            }
+
+            double quotient = dividend / divisor;
+
+            if (quotient > max) {
+                max = quotient;
+                index = j;
+            }
+        }
+
+        return index;
+    }
+
+    private boolean isFeasible(List<Integer> schedule, int j) {
+
+        if (schedule.contains(j)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private double q() {
+        return random.nextDouble();
     }
 }

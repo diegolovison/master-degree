@@ -18,7 +18,7 @@ public class TaillardParser {
         int jobs, machines, upper, lower, i, j;
         int[][] matrix;
         String line;
-        String[] splitted;
+        String[] split;
 
         BufferedReader bufferedReader = null;
         InputStream input = null;
@@ -34,12 +34,12 @@ public class TaillardParser {
 
                     line = bufferedReader.readLine().trim();
 
-                    splitted = line.split("\\s+");
+                    split = line.split("\\s+");
 
-                    jobs = Integer.parseInt(splitted[0]);
-                    machines = Integer.parseInt(splitted[1]);
-                    upper = Integer.parseInt(splitted[3]);
-                    lower = Integer.parseInt(splitted[4]);
+                    jobs = Integer.parseInt(split[0]);
+                    machines = Integer.parseInt(split[1]);
+                    upper = Integer.parseInt(split[3]);
+                    lower = Integer.parseInt(split[4]);
 
                     // skip "processing times :" lines
                     bufferedReader.readLine();
@@ -50,16 +50,16 @@ public class TaillardParser {
 
                         line = bufferedReader.readLine();
 
-                        splitted = line.split("\\s+");
+                        split = line.split("\\s+");
 
                         for (j = 0; j < jobs; ++j) {
-                            matrix[i][j] = Integer.parseInt(splitted[j + 1]);
+                            matrix[i][j] = Integer.parseInt(split[j + 1]);
                         }
                     }
 
                     instances.add(new TaillardInstance(
-                            jobs,
                             machines,
+                            jobs,
                             upper,
                             lower,
                             matrix));

@@ -16,7 +16,7 @@ public class ACSFlowShopResult {
         return time;
     }
 
-    public int getQuality() {
-        return cost - lowerBound;
+    public double getQuality() {
+        return (double) (cost - lowerBound) / lowerBound;
     }
 }
