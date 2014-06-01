@@ -18,14 +18,20 @@ public class ACSFlowShop {
 
     private double[][] t = null;
 
+    public ACSFlowShop(int numberOfJobs, int numberOfMachines) {
+
+        this.numberOfJobs = numberOfJobs;
+        this.numberOfMachines = numberOfMachines;
+    }
+
     // Initialize the pheromone trail
     // set parameters
     public ACSFlowShop(TaillardInstance instance, int iteration, int ant, double a, double beta,
                        double p, double q0) {
 
+        this(instance.getNumberOfJobs(), instance.getNumberOfMachines());
+
         this.instance = instance.getMatrix();
-        this.numberOfJobs = instance.getNumberOfJobs();
-        this.numberOfMachines = instance.getNumberOfMachines();
 
         this.iteration = iteration;
         this.ant = ant;
@@ -41,7 +47,7 @@ public class ACSFlowShop {
 
     public int solve() {
 
-        int globalBestValue = 0;
+        int globalBestValue = Integer.MAX_VALUE;
 
         // Loop at this level each loop is called an iteration
         for (int interationCount=0; interationCount<iteration; interationCount++) {
@@ -85,14 +91,25 @@ public class ACSFlowShop {
         t[i][j] = ((1 - a) * t[i][j]) + ((a * pheromoneDelta(i, j, cmax)));
     }
 
-    public boolean belongsGlobalBestTour(int i, int j) {
+    public boolean belongsGlobalBestTour(double[][]t, int i, int j) {
 
-        return false;
+        int bestMachine = -1;
+        double bestPheromone = Double.MIN_VALUE;
+
+        for (int z=0; z<numberOfMachines; z++) {
+
+            if (t[z][j] > bestPheromone) {
+                bestPheromone = t[z][j];
+                bestMachine = z;
+            }
+        }
+
+        return bestMachine == i;
     }
 
     private double pheromoneDelta(int i, int j, int cmax) {
 
-        if (belongsGlobalBestTour(i, j)) {
+        if (belongsGlobalBestTour(t, i, j)) {
             return Math.pow(cmax, -1);
         } else {
             return 0;

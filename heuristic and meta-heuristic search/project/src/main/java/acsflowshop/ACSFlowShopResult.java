@@ -1,8 +1,5 @@
 package acsflowshop;
 
-/**
- * Created by diego on 31/05/2014.
- */
 public class ACSFlowShopResult {
 
     private int cost;
