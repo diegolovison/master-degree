@@ -58,36 +58,47 @@ public class ACSFlowShop {
 
     public int solve() {
 
-        int globalBestValue = Integer.MAX_VALUE;
+        int bestGlobalCmax = Integer.MAX_VALUE;
 
         // Loop at this level each loop is called an iteration
         for (int iterationCount=0; iterationCount<iteration; iterationCount++) {
+
+            int bestLocalCmax = Integer.MAX_VALUE;
+            boolean[][] bestLocalPath = null;
 
             // Loop at this level each loop is called a step
             for (int antCount=0; antCount<ant; antCount++) {
 
                 // Each ant repeatedly applies state transition rule to select the
                 // next node until a tour is constructed
-                walk();
+                Object[] result = walk();
+                List<Integer> schedule = (List<Integer>) result[0];
+                boolean[][] localPath = (boolean[][]) result[1];
+
+                int localCmax = getMakeSpan(schedule, instance);
+
+                if (localCmax < bestLocalCmax) {
+                    bestLocalCmax = localCmax;
+                    bestLocalPath = localPath;
+                }
             }
 
-            int cmax = calculateCMax();
-
-            if (cmax < globalBestValue) {
-                globalBestValue = cmax;
-                System.out.println(String.format(" > iteration #{(%d)}, best=#{%d}, lowerbound=#{%d}", iterationCount, globalBestValue, lowerBound));
+            if (bestLocalCmax < bestGlobalCmax) {
+                System.out.println(String.format(" > iteration #{(%d)}, best=#{%d}, lowerbound=#{%d}", iterationCount, bestLocalCmax, lowerBound));
             }
 
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
-            globalUpdatePheromone(cmax);
-            if (globalBestValue == lowerBound) break;
+            globalUpdatePheromone(bestLocalPath, bestLocalCmax);
+
+            bestGlobalCmax = calculateCMax();
+            if (bestGlobalCmax == lowerBound) break;
         }
 
-        return globalBestValue;
+        return bestGlobalCmax;
     }
 
-    public int getMakeSpan(Integer[] schedule, int[][] jobInfo) {
+    public int getMakeSpan(List<Integer> schedule, int[][] jobInfo) {
 
         int[] machinesTime = new int[numberOfMachines];
         int time;
@@ -110,42 +121,22 @@ public class ACSFlowShop {
         return machinesTime[numberOfMachines - 1];
     }
 
-    private void globalUpdatePheromone(int cmax) {
+    private void globalUpdatePheromone(boolean[][] bestLocalPath, int cmax) {
 
         for (int i=0; i<numberOfJobs; i++) {
             for (int j=0; j<numberOfJobs; j++) {
 
-                t[i][j] = ((1.0 - a) * t[i][j]) + ((a * pheromoneDelta(i, j, cmax)));
+                if (bestLocalPath[i][j]) {
+                    t[i][j] = ((1.0 - a) * t[i][j]) + ((a * Math.pow(cmax, -1)));
+                }
             }
         }
     }
 
-    public boolean belongsGlobalBestTour(double[][]t, int i, int j) {
-
-        double pheromone = t[i][j];
-
-        for (int u=0; u<numberOfJobs; u++) {
-
-            if (t[i][u] > pheromone) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private double pheromoneDelta(int i, int j, int cmax) {
-
-        if (belongsGlobalBestTour(t, i, j)) {
-            return Math.pow(cmax, -1);
-        } else {
-            return 0;
-        }
-    }
-
-    private void walk() {
+    private Object[] walk() {
 
         List<Integer> schedule = new ArrayList<Integer>(numberOfJobs);
+        boolean[][] localPath = new boolean[numberOfJobs][numberOfJobs];
 
         for (int i=0; i<numberOfJobs; i++) {
 
@@ -154,12 +145,19 @@ public class ACSFlowShop {
             schedule.add(j);
 
             localUpdatePheromone(i, j);
+            localPath[i][j] = true;
         }
+
+        Object[] result = new Object[2];
+        result[0] = schedule;
+        result[1] = localPath;
+
+        return result;
     }
 
     private void localUpdatePheromone(int i, int j) {
 
-        double value = ((0.98 - p) * t[i][j]) + (p * t0);
+        double value = ((1.0 - p) * t[i][j]) + (p * t0);
 
         t[i][j] = value;
         t[j][i] = value;
@@ -188,7 +186,7 @@ public class ACSFlowShop {
             }
         });
 
-        int makespan = getMakeSpan(schedule, instance);
+        int makespan = getMakeSpan(Arrays.asList(schedule), instance);
 
         return makespan;
     }

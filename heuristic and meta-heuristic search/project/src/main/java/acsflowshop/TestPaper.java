@@ -37,9 +37,9 @@ public class TestPaper {
 
         Map<Integer, List<ACSFlowShopResult>> results = new HashMap<Integer, List<ACSFlowShopResult>>();
 
-        for (int count=1; count<=5; count++) {
+        for (TaillardInstance instance : instances) {
 
-            for (TaillardInstance instance : instances) {
+            for (int count=1; count<=5; count++) {
 
                 long initTime = System.currentTimeMillis();
 
