@@ -1,8 +1,5 @@
 package acsflowshop;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 public class TaillardInstance {
 
     private int numberOfJobs;
@@ -11,6 +8,8 @@ public class TaillardInstance {
     private int lowerBound;
     private int[][] instance;
     private double[][] path;
+    private double[][] t;
+    private double t0;
 
     public TaillardInstance(int numberOfMachines, int numberOfJobs, int upperBound,
                             int lowerBound, int[][] instance) {
@@ -21,19 +20,32 @@ public class TaillardInstance {
         this.lowerBound = lowerBound;
         this.instance = instance;
 
-        this.path = createPath();
+        this.t0 = Math.pow((numberOfJobs * upperBound), -1);
+
+        createPath();
+        createPhoromone();
     }
 
-    private double[][] createPath() {
+    private void createPhoromone() {
 
-        double[][] path = new double[numberOfJobs][numberOfJobs];
+        t = new double[numberOfJobs][numberOfJobs];
+
+        for (int i=0; i<numberOfJobs; i++) {
+            for (int j=0; j<numberOfJobs; j++) {
+                t[i][j] = t0;
+            }
+        }
+    }
+
+    private void createPath() {
+
+        path = new double[numberOfJobs][numberOfJobs];
 
         for (int i=0; i<numberOfJobs; i++) {
             for (int u=0; u<numberOfJobs; u++) {
                 path[i][u] = length(i, u);
             }
         }
-        return path;
     }
 
     public int getNumberOfJobs() {
@@ -97,5 +109,13 @@ public class TaillardInstance {
         }
 
         return length;
+    }
+
+    public double[][] getT() {
+        return t;
+    }
+
+    public double getT0() {
+        return t0;
     }
 }

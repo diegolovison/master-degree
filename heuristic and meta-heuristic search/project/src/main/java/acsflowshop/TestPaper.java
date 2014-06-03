@@ -17,8 +17,8 @@ public class TestPaper {
         int[] jobs = {20, 50, 100, 200, 500};
         int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
 
-        //int[] jobs = {20};
-        //int[][] machines = {{5}};
+        //int[] jobs = {200};
+        //int[][] machines = {{10}};
 
         for (int i=0; i<jobs.length; i++) {
 
@@ -43,7 +43,7 @@ public class TestPaper {
 
                 long initTime = System.currentTimeMillis();
 
-                ACSFlowShop acsFlowShop = new ACSFlowShop(instance, 5000, 20, 0.1, 2, 0.1, 0.9);
+                ACSFlowShop acsFlowShop = new ACSFlowShop(instance, 5000, 20, 0.1, 2, 0.1, 0.9, instance.getT(), instance.getT0());
                 int cost = acsFlowShop.solve();
 
                 long duration = System.currentTimeMillis() - initTime;
@@ -75,7 +75,7 @@ public class TestPaper {
         double averageTime = (totalTime / bestTrial.size()) / 1000;
         double averageQuality = totalQuality / bestTrial.size();
 
-        System.out.println(String.format("%s %.2f %.2f", fileName.split("\\.")[0], averageQuality, averageTime));
+        Log.info(String.format("%s %.2f %.2f", fileName.split("\\.")[0], averageQuality, averageTime));
     }
 
     private void addResult(int count, Map<Integer, List<ACSFlowShopResult>> results, ACSFlowShopResult result) {

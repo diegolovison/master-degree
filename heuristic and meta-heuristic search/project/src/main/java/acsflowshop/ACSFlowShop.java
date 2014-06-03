@@ -17,9 +17,7 @@ public class ACSFlowShop {
     private double B;
     private double p;
     private double q0;
-    private int lowerBound;
     private double t0;
-
     private double[][] t;
 
     public ACSFlowShop(int numberOfMachines, int numberOfJobs) {
@@ -33,7 +31,7 @@ public class ACSFlowShop {
     // Initialize the pheromone trail
     // set parameters
     public ACSFlowShop(TaillardInstance instance, int iteration, int ant, double a, double B,
-                       double p, double q0) {
+                       double p, double q0, double[][] t, double t0) {
 
         this(instance.getNumberOfMachines(), instance.getNumberOfJobs());
 
@@ -46,14 +44,8 @@ public class ACSFlowShop {
         this.B = B;
         this.p = p;
         this.q0 = q0;
-        this.t0 = Math.pow((numberOfJobs * instance.getUpperBound()), -1);
-        this.lowerBound = instance.getLowerBound();
-
-        for (int i=0; i<numberOfJobs; i++) {
-            for (int j=0; j<numberOfJobs; j++) {
-                t[i][j] = t0;
-            }
-        }
+        this.t = t;
+        this.t0 = t0;
     }
 
     public int solve() {
@@ -62,41 +54,39 @@ public class ACSFlowShop {
         for (int iterationCount=0; iterationCount<iteration; iterationCount++) {
 
             int bestLocalCmax = Integer.MAX_VALUE;
-            boolean[][] bestLocalPath = null;
+            List<Path> bestLocalSchedule = null;
 
             // Loop at this level each loop is called a step
             for (int antCount=0; antCount<ant; antCount++) {
 
                 // Each ant repeatedly applies state transition rule to select the
                 // next node until a tour is constructed
-                Object[] result = walk();
-                List<Integer> schedule = (List<Integer>) result[0];
-                boolean[][] localPath = (boolean[][]) result[1];
+                List<Path> localSchedule = walk();
 
-                int localCmax = getMakeSpan(schedule, instance);
+                int localCmax = getMakeSpan(localSchedule, instance);
 
                 if (localCmax < bestLocalCmax) {
                     bestLocalCmax = localCmax;
-                    bestLocalPath = localPath;
+                    bestLocalSchedule = localSchedule;
                 }
             }
 
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
-            globalUpdatePheromone(bestLocalPath, bestLocalCmax);
+            globalUpdatePheromone(bestLocalSchedule, bestLocalCmax);
         }
 
         return calculateCMax();
     }
 
-    public int getMakeSpan(List<Integer> schedule, int[][] jobInfo) {
+    public int getMakeSpan(Collection<Path> schedule, int[][] jobInfo) {
 
         int[] machinesTime = new int[numberOfMachines];
         int time;
 
-        for (int job : schedule) {
+        for (Path path : schedule) {
             for (int i = 0; i < numberOfMachines; i++) {
-                time = jobInfo[i][job];
+                time = jobInfo[i][path.getJob()];
                 if (i == 0) {
                     machinesTime[i] = machinesTime[i] + time;
                 } else {
@@ -112,56 +102,44 @@ public class ACSFlowShop {
         return machinesTime[numberOfMachines - 1];
     }
 
-    private void globalUpdatePheromone(boolean[][] bestLocalPath, int cmax) {
+    private void globalUpdatePheromone(List<Path> bestSchedule, int cmax) {
 
-        for (int i=0; i<numberOfJobs; i++) {
-            for (int j=0; j<numberOfJobs; j++) {
-
-                if (bestLocalPath[i][j]) {
-                    t[i][j] = ((1.0 - a) * t[i][j]) + ((a * Math.pow(cmax, -1)));
-                }
-            }
+        for (Path path : bestSchedule) {
+            t[path.getFrom()][path.getJob()] = ((1.0 - a) * t[path.getFrom()][path.getJob()]) + ((a * Math.pow(cmax, -1)));
         }
     }
 
-    private Object[] walk() {
+    private List<Path> walk() {
 
         List<Integer> unvisitJobs = new ArrayList<Integer>(numberOfJobs);
         for (int i=0; i<numberOfJobs; i++) {
             unvisitJobs.add(i);
         }
 
-        List<Integer> schedule = new ArrayList<Integer>(numberOfJobs);
-        boolean[][] localPath = new boolean[numberOfJobs][numberOfJobs];
+        List<Path> schedule = new ArrayList<Path>();
 
         // first node
         int currentJob = getNext(0, unvisitJobs);
-        updateData(0, currentJob, schedule, localPath, unvisitJobs);
+        updateData(0, currentJob, schedule, unvisitJobs);
 
-        while (schedule.size() < numberOfJobs) {
+
+        for (int count=1; count<numberOfJobs; count++) {
 
             int j = getNext(currentJob, unvisitJobs);
 
-            updateData(currentJob, j, schedule, localPath, unvisitJobs);
+            updateData(currentJob, j, schedule, unvisitJobs);
 
             currentJob = j;
         }
 
-        Object[] result = new Object[2];
-        result[0] = schedule;
-        result[1] = localPath;
-
-        return result;
+        return schedule;
     }
 
-    private void updateData(int i, Integer j, List<Integer> schedule, boolean[][] localPath, List<Integer> unvisitJobs) {
+    private void updateData(int from, Integer job, List<Path> schedule, List<Integer> unvisitJobs) {
 
-        schedule.add(j);
-        localUpdatePheromone(i, j);
-        localPath[i][j] = true;
-
-        unvisitJobs.remove(j);
-
+        localUpdatePheromone(from, job);
+        schedule.add(new Path(from, job));
+        unvisitJobs.remove(job);
     }
 
     private void localUpdatePheromone(int i, int j) {
@@ -171,8 +149,7 @@ public class ACSFlowShop {
 
     private int calculateCMax() {
 
-        Integer[] schedule = new Integer[numberOfJobs];
-        final Double[] data = new Double[numberOfJobs];
+        List<Path> schedule = new ArrayList<Path>();
 
         for (int i=0; i<numberOfJobs; i++) {
 
@@ -181,20 +158,15 @@ public class ACSFlowShop {
                 sum += t[i][j];
             }
 
-            schedule[i] = i;
-            data[i] = sum;
+            Path path = new Path(i);
+            path.setPheromone(sum);
+
+            schedule.add(path);
         }
 
-        Arrays.sort(schedule, new Comparator<Integer>() {
-            @Override
-            public int compare(final Integer o1, final Integer o2) {
-                return Double.compare(data[o1], data[o2]);
-            }
-        });
+        Collections.sort(schedule);
 
-        int makespan = getMakeSpan(Arrays.asList(schedule), instance);
-
-        return makespan;
+        return getMakeSpan(schedule, instance);
     }
 
     private int getNext(int i, List<Integer> unvisitJobs) {
