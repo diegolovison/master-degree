@@ -14,11 +14,11 @@ public class TestPaper {
 
     public void execute() {
 
-        //int[] jobs = {20, 50, 100, 200, 500};
-        //int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
+        int[] jobs = {20, 50, 100, 200, 500};
+        int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
 
-        int[] jobs = {20};
-        int[][] machines = {{5}};
+        //int[] jobs = {20};
+        //int[][] machines = {{5}};
 
         for (int i=0; i<jobs.length; i++) {
 
@@ -49,7 +49,11 @@ public class TestPaper {
                 long duration = System.currentTimeMillis() - initTime;
 
                 addResult(1, results, new ACSFlowShopResult(cost, instance.getLowerBound(), duration));
+
+                break;
             }
+
+            break;
         }
 
         List<ACSFlowShopResult> bestTrial = getBestTrial(results);
@@ -68,7 +72,7 @@ public class TestPaper {
             totalQuality += result.getQuality();
         }
 
-        double averageTime = totalTime / bestTrial.size();
+        double averageTime = (totalTime / bestTrial.size()) / 1000;
         double averageQuality = totalQuality / bestTrial.size();
 
         System.out.println(String.format("%s %.2f %.2f", fileName.split("\\.")[0], averageQuality, averageTime));

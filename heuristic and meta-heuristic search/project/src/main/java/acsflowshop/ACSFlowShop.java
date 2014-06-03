@@ -58,8 +58,6 @@ public class ACSFlowShop {
 
     public int solve() {
 
-        int bestGlobalCmax = Integer.MAX_VALUE;
-
         // Loop at this level each loop is called an iteration
         for (int iterationCount=0; iterationCount<iteration; iterationCount++) {
 
@@ -83,19 +81,12 @@ public class ACSFlowShop {
                 }
             }
 
-            if (bestLocalCmax < bestGlobalCmax) {
-                System.out.println(String.format(" > iteration #{(%d)}, best=#{%d}, lowerbound=#{%d}", iterationCount, bestLocalCmax, lowerBound));
-            }
-
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
             globalUpdatePheromone(bestLocalPath, bestLocalCmax);
-
-            bestGlobalCmax = calculateCMax();
-            if (bestGlobalCmax == lowerBound) break;
         }
 
-        return bestGlobalCmax;
+        return calculateCMax();
     }
 
     public int getMakeSpan(List<Integer> schedule, int[][] jobInfo) {
@@ -135,17 +126,25 @@ public class ACSFlowShop {
 
     private Object[] walk() {
 
+        List<Integer> unvisitJobs = new ArrayList<Integer>(numberOfJobs);
+        for (int i=0; i<numberOfJobs; i++) {
+            unvisitJobs.add(i);
+        }
+
         List<Integer> schedule = new ArrayList<Integer>(numberOfJobs);
         boolean[][] localPath = new boolean[numberOfJobs][numberOfJobs];
 
-        for (int i=0; i<numberOfJobs; i++) {
+        // first node
+        int currentJob = getNext(0, unvisitJobs);
+        updateData(0, currentJob, schedule, localPath, unvisitJobs);
 
-            int j = getNext(schedule, i);
+        while (schedule.size() < numberOfJobs) {
 
-            schedule.add(j);
+            int j = getNext(currentJob, unvisitJobs);
 
-            localUpdatePheromone(i, j);
-            localPath[i][j] = true;
+            updateData(currentJob, j, schedule, localPath, unvisitJobs);
+
+            currentJob = j;
         }
 
         Object[] result = new Object[2];
@@ -155,12 +154,19 @@ public class ACSFlowShop {
         return result;
     }
 
+    private void updateData(int i, Integer j, List<Integer> schedule, boolean[][] localPath, List<Integer> unvisitJobs) {
+
+        schedule.add(j);
+        localUpdatePheromone(i, j);
+        localPath[i][j] = true;
+
+        unvisitJobs.remove(j);
+
+    }
+
     private void localUpdatePheromone(int i, int j) {
 
-        double value = ((1.0 - p) * t[i][j]) + (p * t0);
-
-        t[i][j] = value;
-        t[j][i] = value;
+        t[i][j] = ((0.99 - p) * t[i][j]) + (p * t0);
     }
 
     private int calculateCMax() {
@@ -191,23 +197,21 @@ public class ACSFlowShop {
         return makespan;
     }
 
-    private int getNext(List<Integer> schedule, int i) {
+    private int getNext(int i, List<Integer> unvisitJobs) {
 
         if (q() <= q0) {
-            return transitionRule(schedule, i);
+            return transitionRule(i, unvisitJobs);
         } else {
-            return randomProportionalRule(schedule, i);
+            return randomProportionalRule(i, unvisitJobs);
         }
     }
 
-    private int transitionRule(List<Integer> schedule, int i) {
+    private int transitionRule(int i, List<Integer> unvisitJobs) {
 
         double max = -1;
         int index = -1;
 
-        for (int u=0; u<numberOfJobs; u++) {
-
-            if (!isFeasible(schedule, u)) continue;
+        for (int u : unvisitJobs) {
 
             double value = transitionValue(i, u);
 
@@ -224,24 +228,18 @@ public class ACSFlowShop {
         return t[i][u] * Math.pow(path[i][u], B);
     }
 
-    private int randomProportionalRule(List<Integer> schedule, int i) {
+    private int randomProportionalRule(int i, List<Integer> unvisitJobs) {
 
         double max = -1;
         int index = -1;
 
-        for (int j = 0; j < numberOfJobs; j++) {
-
-            if (!isFeasible(schedule, j)) continue;
+        for (int j : unvisitJobs) {
 
             double dividend = transitionValue(i, j);
 
             Double divisor = 0.0;
-
-            for (int u = 0; u < numberOfJobs; u++) {
-
-                if (isFeasible(schedule, u)) {
-                    divisor += transitionValue(i, u);
-                }
+            for (int u : unvisitJobs) {
+                divisor += transitionValue(i, u);
             }
 
             double quotient = dividend / divisor;
@@ -253,15 +251,6 @@ public class ACSFlowShop {
         }
 
         return index;
-    }
-
-    private boolean isFeasible(List<Integer> schedule, int j) {
-
-        if (schedule.contains(j)) {
-            return false;
-        } else {
-            return true;
-        }
     }
 
     private double q() {
