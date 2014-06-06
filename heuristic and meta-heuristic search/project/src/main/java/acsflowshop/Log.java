@@ -12,6 +12,6 @@ public class Log {
 
     public static void info(Object message) {
 
-        System.out.println(format.format(new Date()) +": " + message);
+        System.out.println(format.format(new Date()) +" " + message);
     }
 }

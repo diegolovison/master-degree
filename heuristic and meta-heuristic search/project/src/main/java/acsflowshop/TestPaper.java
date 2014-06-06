@@ -9,27 +9,32 @@ public class TestPaper {
 
     public static void main(String... args) {
 
-        new TestPaper().execute();
+        Integer round = 1;
+
+        if (args.length > 0) {
+            round = Integer.valueOf(args[0]);
+        }
+
+        new TestPaper().execute(round);
     }
 
-    public void execute() {
+    public void execute(int round) {
 
-        int[] jobs = {20, 50, 100, 200, 500};
-        int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
-
-        //int[] jobs = {200};
-        //int[][] machines = {{10}};
+        //int[] jobs = {20, 50, 100, 200, 500};
+        int[] jobs = {500};
+        //int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
+        int[][] machines = {{20}};
 
         for (int i=0; i<jobs.length; i++) {
 
             for (int j=0; j<machines[i].length; j++) {
 
-                resolveInstance(jobs[i], machines[i][j]);
+                resolveInstance(jobs[i], machines[i][j], round);
             }
         }
     }
 
-    private void resolveInstance(int job, int machine) {
+    private void resolveInstance(int job, int machine, int round) {
 
         String fileName = getFileName(job, machine);
 
@@ -37,79 +42,21 @@ public class TestPaper {
 
         Map<Integer, List<ACSFlowShopResult>> results = new HashMap<Integer, List<ACSFlowShopResult>>();
 
-        for (TaillardInstance instance : instances) {
+        for (int i=6; i<instances.size(); i++) {
 
-            for (int count=1; count<=5; count++) {
+            TaillardInstance instance = instances.get(i);
 
-                long initTime = System.currentTimeMillis();
+            long initTime = System.currentTimeMillis();
 
-                ACSFlowShop acsFlowShop = new ACSFlowShop(instance, 5000, 20, 0.1, 2, 0.1, 0.9, instance.getT(), instance.getT0());
-                int cost = acsFlowShop.solve();
+            ACSFlowShop acsFlowShop = new ACSFlowShop(instance, 5000, 20, 0.1, 2, 0.1, 0.9, instance.getT(), instance.getT0());
+            double cost = acsFlowShop.solve();
 
-                long duration = System.currentTimeMillis() - initTime;
+            double duration = System.currentTimeMillis() - initTime;
 
-                addResult(1, results, new ACSFlowShopResult(cost, instance.getLowerBound(), duration));
+            double quality = (cost - instance.getLowerBound()) / instance.getLowerBound();
 
-                break;
-            }
-
-            break;
+            Log.info(String.format("%d %s-%d %.2f %.2f", round, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
         }
-
-        List<ACSFlowShopResult> bestTrial = getBestTrial(results);
-
-        print(bestTrial, fileName);
-    }
-
-    private void print(List<ACSFlowShopResult> bestTrial, String fileName) {
-
-        long totalTime = 0;
-        double totalQuality = 0;
-
-        for (ACSFlowShopResult result : bestTrial) {
-
-            totalTime += result.getTime();
-            totalQuality += result.getQuality();
-        }
-
-        double averageTime = (totalTime / bestTrial.size()) / 1000;
-        double averageQuality = totalQuality / bestTrial.size();
-
-        Log.info(String.format("%s %.2f %.2f", fileName.split("\\.")[0], averageQuality, averageTime));
-    }
-
-    private void addResult(int count, Map<Integer, List<ACSFlowShopResult>> results, ACSFlowShopResult result) {
-
-        if (!results.containsKey(count)) {
-            results.put(count, new ArrayList<ACSFlowShopResult>());
-        }
-
-        results.get(count).add(result);
-    }
-
-    private List<ACSFlowShopResult> getBestTrial(Map<Integer, List<ACSFlowShopResult>> results) {
-
-        double bestAverage = Double.MAX_VALUE;
-        int best = 0;
-
-        for (int count : results.keySet()) {
-
-            double total = 0;
-            List<ACSFlowShopResult> trial = results.get(count);
-
-            for (ACSFlowShopResult result : trial) {
-                total += result.getQuality();
-            }
-
-            double average = total / trial.size();
-
-            if (average < bestAverage) {
-                bestAverage = average;
-                best = count;
-            }
-        }
-
-        return results.get(best);
     }
 
     private String getFileName(int job, int machine) {

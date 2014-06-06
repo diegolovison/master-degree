@@ -7,47 +7,24 @@ import java.util.Comparator;
  */
 public class Path implements Comparable<Path> {
 
-    private int from;
-    private int job;
+    private int i;
     private Double pheromone;
 
-    public Path(int job) {
-        this.job = job;
+    public Path(int i, Double pheromone) {
+        this.i = i;
+        this.pheromone = pheromone;
     }
 
-    public Path(int from, int job) {
-
-        this(job);
-
-        this.from = from;
-    }
-
-    public int getFrom() {
-        return from;
-    }
-
-    public int getJob() {
-        return job;
+    public int getI() {
+        return i;
     }
 
     public Double getPheromone() {
         return pheromone;
     }
 
-    public void setPheromone(Double pheromone) {
-        this.pheromone = pheromone;
-    }
-
     @Override
     public int compareTo(Path o) {
         return o.getPheromone().compareTo(pheromone);
-    }
-
-    @Override
-    public String toString() {
-        return "Path{" +
-                "job=" + job +
-                ", pheromone=" + pheromone +
-                '}';
     }
 }
