@@ -7,54 +7,82 @@ public class ACSFlowShop {
     private static final Random random = new Random();
 
     private int[][] instance;
-    private double[][] path;
     private int numberOfJobs;
     private int numberOfMachines;
 
     private int iteration;
     private int ant;
     private double a;
-    private double B;
+    private int B;
     private double p;
     private double q0;
     private double t0;
-    private double[][] t;
 
-    public ACSFlowShop(int numberOfMachines, int numberOfJobs) {
+    private double[][] t;
+    private double[] path;
+
+    public ACSFlowShop(int numberOfMachines, int numberOfJobs, int[][] instance) {
 
         this.numberOfMachines = numberOfMachines;
         this.numberOfJobs = numberOfJobs;
 
-        this.t = new double[numberOfJobs][numberOfJobs];
+        this.instance = instance;
     }
 
-    // Initialize the pheromone trail
-    // set parameters
-    public ACSFlowShop(TaillardInstance instance, int iteration, int ant, double a, double B,
-                       double p, double q0, double[][] t, double t0) {
+    public ACSFlowShop path(double[] path) {
+        this.path = path;
+        return this;
+    }
 
-        this(instance.getNumberOfMachines(), instance.getNumberOfJobs());
-
-        this.instance = instance.getInstance();
-        this.path = instance.getPath();
-
-        this.iteration = iteration;
-        this.ant = ant;
-        this.a = a;
-        this.B = B;
-        this.p = p;
-        this.q0 = q0;
-        this.t = t;
+    public ACSFlowShop t0(double t0) {
         this.t0 = t0;
+        return this;
+    }
+
+    public ACSFlowShop t(double[][] t) {
+        this.t = t;
+        return this;
+    }
+
+    public ACSFlowShop q0(double q0) {
+        this.q0 = q0;
+        return this;
+    }
+
+    public ACSFlowShop p(double p) {
+        this.p = p;
+        return this;
+    }
+
+    public ACSFlowShop B(int B) {
+        this.B = B;
+        return this;
+    }
+
+    public ACSFlowShop a(double a) {
+        this.a = a;
+        return this;
+    }
+
+    public ACSFlowShop ant(int ant) {
+        this.ant = ant;
+        return this;
+    }
+
+    public ACSFlowShop iteration(int iteration) {
+        this.iteration = iteration;
+        return this;
     }
 
     public int solve() {
+
+        int bestCmax = Integer.MAX_VALUE;
+        List<Integer> bestSchedule = new ArrayList<Integer>();
 
         // Loop at this level each loop is called an iteration
         for (int iterationCount=0; iterationCount<iteration; iterationCount++) {
 
             int bestLocalCmax = Integer.MAX_VALUE;
-            List<Integer> bestLocalSchedule = null;
             boolean[][] bestLocalPath = null;
 
             // Loop at this level each loop is called a step
@@ -76,7 +104,9 @@ public class ACSFlowShop {
                     Integer j = getNext(currentJob, unvisitJobs);
 
                     localPath[currentJob][j] = true;
+
                     localUpdatePheromone(currentJob, j);
+
                     schedule.add(j);
                     unvisitJobs.remove(j);
 
@@ -87,17 +117,22 @@ public class ACSFlowShop {
 
                 if (localCmax < bestLocalCmax) {
                     bestLocalCmax = localCmax;
-                    bestLocalSchedule = schedule;
                     bestLocalPath = localPath;
+                }
+
+                if (localCmax < bestCmax) {
+                    bestCmax = localCmax;
+                    bestSchedule = schedule;
+                    System.out.println(iterationCount +" - " + bestSchedule + " = " + bestCmax);
                 }
             }
 
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
-            globalUpdatePheromone(bestLocalPath, bestLocalCmax);
+            globalUpdatePheromone(bestLocalPath, bestCmax / 2);
         }
 
-        return calculateCMax();
+        return bestCmax;
     }
 
     public int getMakeSpan(Collection<Integer> schedule, int[][] jobInfo) {
@@ -142,32 +177,6 @@ public class ACSFlowShop {
         t[i][j] = ((1 - p) * t[i][j]) + (p * t0);
     }
 
-    private int calculateCMax() {
-
-        List<Path> bestPath = new ArrayList<Path>();
-
-        for (int i=0; i<numberOfJobs; i++) {
-
-            double sum = 0.0;
-            for (int j=0; j<numberOfJobs; j++) {
-                sum += t[i][j];
-            }
-
-            Path path = new Path(i, sum);
-
-            bestPath.add(path);
-        }
-
-        Collections.sort(bestPath);
-
-        List<Integer> schedule = new ArrayList<Integer>();
-        for (Path path : bestPath) {
-            schedule.add(path.getI());
-        }
-
-        return getMakeSpan(schedule, instance);
-    }
-
     private int getNext(int i, List<Integer> unvisitJobs) {
 
         if (q() <= q0) {
@@ -196,7 +205,10 @@ public class ACSFlowShop {
     }
 
     private double transitionValue(int i, int u) {
-        return t[i][u] * Math.pow(path[i][u], B);
+
+        double length = i != u ? path[u] : 0.0;
+
+        return t[i][u] * Math.pow(length, B);
     }
 
     private int randomProportionalRule(int i, List<Integer> unvisitJobs) {

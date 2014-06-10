@@ -21,9 +21,10 @@ public class TestPaper {
     public void execute(int round) {
 
         //int[] jobs = {20, 50, 100, 200, 500};
-        int[] jobs = {500};
         //int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
-        int[][] machines = {{20}};
+
+        int[] jobs = {20};
+        int[][] machines = {{5, 10}};
 
         for (int i=0; i<jobs.length; i++) {
 
@@ -40,20 +41,29 @@ public class TestPaper {
 
         List<TaillardInstance> instances = TaillardParser.parse(fileName);
 
-        Map<Integer, List<ACSFlowShopResult>> results = new HashMap<Integer, List<ACSFlowShopResult>>();
-
-        for (int i=6; i<instances.size(); i++) {
+        //for (int i=0; i<instances.size(); i++) {
+        for (int i=0; i<1; i++) {
 
             TaillardInstance instance = instances.get(i);
 
             long initTime = System.currentTimeMillis();
 
-            ACSFlowShop acsFlowShop = new ACSFlowShop(instance, 5000, 20, 0.1, 2, 0.1, 0.9, instance.getT(), instance.getT0());
+            ACSFlowShop acsFlowShop = new ACSFlowShop(instance.getNumberOfMachines(), instance.getNumberOfJobs(), instance.getInstance())
+                    .iteration(5000)
+                    .ant(20)
+                    .a(0.1)
+                    .B(2)
+                    .p(0.1)
+                    .q0(0.9)
+                    .t0(instance.getT0())
+                    .t(ACSFlowShopHelper.createPhoromone(instance.getNumberOfJobs(), instance.getT0()))
+                    .path(ACSFlowShopHelper.createPath(instance.getInstance()));
+
             double cost = acsFlowShop.solve();
 
             double duration = System.currentTimeMillis() - initTime;
 
-            double quality = (cost - instance.getLowerBound()) / instance.getLowerBound();
+            double quality = ((cost - instance.getLowerBound()) / instance.getLowerBound()) * 100;
 
             Log.info(String.format("%d %s-%d %.2f %.2f", round, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
         }
