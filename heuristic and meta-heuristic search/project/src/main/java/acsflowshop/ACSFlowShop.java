@@ -90,9 +90,9 @@ public class ACSFlowShop {
 
                 // Each ant repeatedly applies state transition rule to select the
                 // next node until a tour is constructed
-                List<Integer> unvisitJobs = new ArrayList<Integer>(numberOfJobs);
+                List<Integer> unvisitedJobs = new ArrayList<Integer>(numberOfJobs);
                 for (int i=0; i<numberOfJobs; i++) {
-                    unvisitJobs.add(i);
+                    unvisitedJobs.add(i);
                 }
 
                 List<Integer> schedule = new ArrayList<Integer>();
@@ -101,14 +101,14 @@ public class ACSFlowShop {
                 int currentJob = 0;
                 for (int count=0; count<numberOfJobs; count++) {
 
-                    Integer j = getNext(currentJob, unvisitJobs);
+                    Integer j = getNext(currentJob, unvisitedJobs);
 
                     localPath[currentJob][j] = true;
 
                     localUpdatePheromone(currentJob, j);
 
                     schedule.add(j);
-                    unvisitJobs.remove(j);
+                    unvisitedJobs.remove(j);
 
                     currentJob = j;
                 }
@@ -123,13 +123,12 @@ public class ACSFlowShop {
                 if (localCmax < bestCmax) {
                     bestCmax = localCmax;
                     bestSchedule = schedule;
-                    System.out.println(iterationCount +" - " + bestSchedule + " = " + bestCmax);
                 }
             }
 
             // Apply global updating rule to increase pheromone on edges of the
             // current best tour and decrease pheromone on other edges
-            globalUpdatePheromone(bestLocalPath, bestCmax / 2);
+            globalUpdatePheromone(bestLocalPath, bestLocalCmax);
         }
 
         return bestCmax;
@@ -174,24 +173,24 @@ public class ACSFlowShop {
 
     private void localUpdatePheromone(int i, int j) {
 
-        t[i][j] = ((1 - p) * t[i][j]) + (p * t0);
+        t[i][j] = (1 - p) * t[i][j] + (p * t0);
     }
 
-    private int getNext(int i, List<Integer> unvisitJobs) {
+    private int getNext(int i, List<Integer> unvisitedJobs) {
 
         if (q() <= q0) {
-            return transitionRule(i, unvisitJobs);
+            return transitionRule(i, unvisitedJobs);
         } else {
-            return randomProportionalRule(i, unvisitJobs);
+            return randomProportionalRule(i, unvisitedJobs);
         }
     }
 
-    private int transitionRule(int i, List<Integer> unvisitJobs) {
+    private int transitionRule(int i, List<Integer> unvisitedJobs) {
 
         double max = -1;
         int index = -1;
 
-        for (int u : unvisitJobs) {
+        for (int u : unvisitedJobs) {
 
             double value = transitionValue(i, u);
 
@@ -206,34 +205,54 @@ public class ACSFlowShop {
 
     private double transitionValue(int i, int u) {
 
-        double length = i != u ? path[u] : 0.0;
-
-        return t[i][u] * Math.pow(length, B);
+        return t[i][u] * Math.pow(path[u], B);
     }
 
-    private int randomProportionalRule(int i, List<Integer> unvisitJobs) {
+    private int randomProportionalRule(int i, List<Integer> unvisitedJobs) {
 
-        double max = -1;
-        int index = -1;
+        List<Double> probabilities = new ArrayList<Double>();
 
-        for (int j : unvisitJobs) {
+        double last = 0.0;
+
+        for (int j : unvisitedJobs) {
 
             double dividend = transitionValue(i, j);
 
             Double divisor = 0.0;
-            for (int u : unvisitJobs) {
+            for (int u : unvisitedJobs) {
                 divisor += transitionValue(i, u);
             }
 
             double quotient = dividend / divisor;
 
-            if (quotient > max) {
-                max = quotient;
-                index = j;
+            quotient = quotient + last;
+
+            probabilities.add(quotient);
+
+            last = quotient;
+        }
+
+        double randomValue = rand(probabilities.get(0), probabilities.get(probabilities.size() - 1));
+
+        int j = -1;
+
+        for (int index=0; index<probabilities.size(); index++) {
+
+            int next = unvisitedJobs.get(index);
+
+            Double probability = probabilities.get(index);
+
+            if (probability >= randomValue) {
+                j = next;
+                break;
             }
         }
 
-        return index;
+        return j;
+    }
+
+    private double rand(double rangeMin, double rangeMax) {
+        return rangeMin + (rangeMax - rangeMin) * random.nextDouble();
     }
 
     private double q() {

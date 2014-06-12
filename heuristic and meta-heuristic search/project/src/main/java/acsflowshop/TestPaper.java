@@ -9,63 +9,62 @@ public class TestPaper {
 
     public static void main(String... args) {
 
-        Integer round = 1;
-
         if (args.length > 0) {
-            round = Integer.valueOf(args[0]);
+            new TestPaper().resolveInstance(Integer.valueOf(args[0]), Integer.valueOf(args[1]));
+        } else {
+            new TestPaper().execute();
         }
-
-        new TestPaper().execute(round);
     }
 
-    public void execute(int round) {
+    public void execute() {
 
-        //int[] jobs = {20, 50, 100, 200, 500};
-        //int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
-
-        int[] jobs = {20};
-        int[][] machines = {{5, 10}};
+        int[] jobs = {20, 50, 100, 200, 500};
+        int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
 
         for (int i=0; i<jobs.length; i++) {
 
             for (int j=0; j<machines[i].length; j++) {
 
-                resolveInstance(jobs[i], machines[i][j], round);
+                resolveInstance(jobs[i], machines[i][j]);
             }
         }
     }
 
-    private void resolveInstance(int job, int machine, int round) {
+    public void resolveInstance(int job, int machine) {
 
         String fileName = getFileName(job, machine);
 
         List<TaillardInstance> instances = TaillardParser.parse(fileName);
 
-        //for (int i=0; i<instances.size(); i++) {
-        for (int i=0; i<1; i++) {
+        for (int i=0; i<instances.size(); i++) {
 
-            TaillardInstance instance = instances.get(i);
+            for (int count=1; count<=5; count++) {
 
-            long initTime = System.currentTimeMillis();
+                TaillardInstance instance = instances.get(i);
 
-            ACSFlowShop acsFlowShop = new ACSFlowShop(instance.getNumberOfMachines(), instance.getNumberOfJobs(), instance.getInstance())
-                    .iteration(5000)
-                    .ant(20)
-                    .a(0.1)
-                    .B(2)
-                    .p(0.1)
-                    .q0(0.9)
-                    .t0(instance.getT0())
-                    .t(ACSFlowShopHelper.createPhoromone(instance.getNumberOfJobs(), instance.getT0()))
-                    .path(ACSFlowShopHelper.createPath(instance.getInstance()));
+                long initTime = System.currentTimeMillis();
 
-            double cost = acsFlowShop.solve();
+                double t0 = Math.pow((instance.getNumberOfJobs() * instance.getUpperBound()), -1);
 
-            double duration = System.currentTimeMillis() - initTime;
+                ACSFlowShop acsFlowShop = new ACSFlowShop(instance.getNumberOfMachines(), instance.getNumberOfJobs(), instance.getInstance())
+                        .iteration(5000)
+                        .ant(20)
+                        .a(0.1)
+                        .B(2)
+                        .p(0.1)
+                        .q0(0.2)
+                        .t0(t0)
+                        .t(ACSFlowShopHelper.createPhoromone(instance.getNumberOfJobs(), t0))
+                        .path(ACSFlowShopHelper.createPath(instance.getInstance()));
 
-            double quality = ((cost - instance.getLowerBound()) / instance.getLowerBound()) * 100;
+                double cost = acsFlowShop.solve();
 
-            Log.info(String.format("%d %s-%d %.2f %.2f", round, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
+                double duration = System.currentTimeMillis() - initTime;
+
+                double quality = ((cost - instance.getLowerBound()) / instance.getLowerBound()) * 100;
+
+                Log.info(String.format("%d %s-%d %.2f %.2f", count, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
+            }
         }
     }
 

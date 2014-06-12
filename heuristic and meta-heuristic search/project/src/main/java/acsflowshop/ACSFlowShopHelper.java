@@ -37,7 +37,7 @@ public class ACSFlowShopHelper {
         }
 
         for (int u=0; u<numberOfJobs; u++) {
-            path[u] -= min + 1;
+            path[u] = path[u] - min + 1;
         }
 
         return path;
@@ -58,6 +58,8 @@ public class ACSFlowShopHelper {
 
                 var -= 2;
 
+                length = length + (numberOfMachines - var) * instance[m-1][u];
+
             } else { // increase
 
                 if (!useTheSameValue) { // when is a par we need to keep the same value
@@ -65,9 +67,9 @@ public class ACSFlowShopHelper {
                 } else {
                     useTheSameValue = false;
                 }
-            }
 
-            length += (numberOfMachines - var) * instance[m-1][u];
+                length = length - (numberOfMachines - var) * instance[m-1][u];
+            }
         }
 
         return length;

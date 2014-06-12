@@ -1,0 +1,6 @@
+
+C:\project\github\master-degree\heuristic and meta-heuristic search\project>java -jar -server -Dcom.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump=false -Dfile.encoding=UTF-8 -Xms256m -Xmx1024m -XX:MaxPermSize=512M -XX:-HeapDumpOnOutOfMemoryError -Dsun.rmi.dgc.client.gcInterval=1800000 -Dsun.rmi.dgc.server.gcInterval=1800000 -XX:+UseStringCache -XX:+UseCompressedStrings -XX:+OptimizeStringConcat -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+DisableExplicitGC target/project-1.0-SNAPSHOT.jar 20 5 
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option UseCompressedStrings; support was removed in 7.0
+15:53:25 1 tai20_5-1 7.95 27.41
+15:53:51 2 tai20_5-1 7.31 26.06
+15:54:17 3 tai20_5-1 7.55 25.92

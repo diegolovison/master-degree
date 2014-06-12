@@ -5,8 +5,8 @@ public class TaillardInstance {
     private int numberOfJobs;
     private int numberOfMachines;
     private int lowerBound;
+    private int upperBound;
     private int[][] instance;
-    private double t0;
 
     public TaillardInstance(int numberOfMachines, int numberOfJobs, int upperBound,
                             int lowerBound, int[][] instance) {
@@ -14,9 +14,8 @@ public class TaillardInstance {
         this.numberOfMachines = numberOfMachines;
         this.numberOfJobs = numberOfJobs;
         this.lowerBound = lowerBound;
+        this.upperBound = upperBound;
         this.instance = instance;
-
-        this.t0 = Math.pow((numberOfJobs * upperBound), -1);
     }
 
     public int getNumberOfJobs() {
@@ -35,7 +34,7 @@ public class TaillardInstance {
         return instance;
     }
 
-    public double getT0() {
-        return t0;
+    public int getUpperBound() {
+        return upperBound;
     }
 }
