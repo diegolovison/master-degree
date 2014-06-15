@@ -61,9 +61,9 @@ public class TestPaper {
 
                 double duration = System.currentTimeMillis() - initTime;
 
-                double quality = ((cost - instance.getLowerBound()) / instance.getLowerBound()) * 100;
+                double quality = ((cost - instance.getLowerBound()) / instance.getLowerBound());
 
-                Log.info(String.format("%d %s-%d %.2f %.2f", count, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
+                Log.info(String.format("%d %s-%d %.4f %.2f", count, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
             }
         }
     }
