@@ -214,14 +214,14 @@ public class ACSFlowShop {
 
         double last = 0.0;
 
+        Double divisor = 0.0;
+        for (int u : unvisitedJobs) {
+            divisor += transitionValue(i, u);
+        }
+
         for (int j : unvisitedJobs) {
 
             double dividend = transitionValue(i, j);
-
-            Double divisor = 0.0;
-            for (int u : unvisitedJobs) {
-                divisor += transitionValue(i, u);
-            }
 
             double quotient = dividend / divisor;
 
