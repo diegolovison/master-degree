@@ -1,0 +1,18 @@
+
+C:\project\github\master-degree\heuristic and meta-heuristic search\project>java -jar -server -Dcom.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump=false -Dfile.encoding=UTF-8 -Xms256m -Xmx1024m -XX:MaxPermSize=512M -XX:-HeapDumpOnOutOfMemoryError -Dsun.rmi.dgc.client.gcInterval=1800000 -Dsun.rmi.dgc.server.gcInterval=1800000 -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+DisableExplicitGC target/project-1.0-SNAPSHOT.jar 100 10 
+06:46:08 1 tai100_10-1 7.69 642.74
+06:56:52 2 tai100_10-1 8.00 643.57
+07:07:39 3 tai100_10-1 7.69 647.88
+07:18:29 4 tai100_10-1 7.64 649.79
+07:29:21 5 tai100_10-1 8.11 651.43
+07:40:14 1 tai100_10-2 6.72 652.90
+07:51:08 2 tai100_10-2 8.16 654.24
+08:02:00 3 tai100_10-2 8.40 652.57
+08:12:55 4 tai100_10-2 8.08 654.62
+08:23:53 5 tai100_10-2 8.70 657.66
+08:34:52 1 tai100_10-3 7.10 659.08
+08:45:54 2 tai100_10-3 7.38 662.68
+08:56:56 3 tai100_10-3 7.22 661.89
+09:08:01 4 tai100_10-3 7.36 664.49
+09:19:07 5 tai100_10-3 6.88 665.75
+09:30:12 1 tai100_10-4 9.32 664.97
