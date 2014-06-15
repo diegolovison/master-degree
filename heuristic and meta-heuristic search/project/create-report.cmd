@@ -1,4 +1,4 @@
-mvn clean package
+call build.cmd
 
 call run.cmd 20 5 > report\20-5.log
 echo "20 5"
