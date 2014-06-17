@@ -98,7 +98,7 @@ public class ACSFlowShop {
                 List<Integer> schedule = new ArrayList<Integer>();
                 boolean[][] localPath = new boolean[numberOfJobs][numberOfJobs];
 
-                int currentJob = 0;
+                int currentJob = rand(0, numberOfJobs-1);
                 for (int count=0; count<numberOfJobs; count++) {
 
                     Integer j = getNext(currentJob, unvisitedJobs);
@@ -176,7 +176,7 @@ public class ACSFlowShop {
         t[i][j] = (1 - p) * t[i][j] + (p * t0);
     }
 
-    private int getNext(int i, List<Integer> unvisitedJobs) {
+    public int getNext(int i, List<Integer> unvisitedJobs) {
 
         if (q() <= q0) {
             return transitionRule(i, unvisitedJobs);
@@ -249,6 +249,10 @@ public class ACSFlowShop {
         }
 
         return j;
+    }
+
+    private int rand(int min, int max) {
+        return random.nextInt((max - min) + 1) + min;
     }
 
     private double rand(double rangeMin, double rangeMax) {

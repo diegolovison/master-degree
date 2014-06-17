@@ -25,3 +25,6 @@ call run.cmd 200 10 > report\200-10.log
 echo "200 10"
 call run.cmd 200 20 > report\200-20.log
 echo "200 20"
+
+call run.cmd 500 20 > report\500-20.log
+echo "500 20"

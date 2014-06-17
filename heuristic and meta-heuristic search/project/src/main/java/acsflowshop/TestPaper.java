@@ -10,13 +10,13 @@ public class TestPaper {
     public static void main(String... args) {
 
         if (args.length > 0) {
-            new TestPaper().resolveInstance(Integer.valueOf(args[0]), Integer.valueOf(args[1]));
+            new TestPaper().resolveInstance(Integer.valueOf(args[0]), Integer.valueOf(args[1]), 5000, 20);
         } else {
-            new TestPaper().execute();
+            new TestPaper().execute(5000, 20);
         }
     }
 
-    public void execute() {
+    public void execute(int iteration, int ant) {
 
         int[] jobs = {20, 50, 100, 200, 500};
         int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
@@ -25,12 +25,12 @@ public class TestPaper {
 
             for (int j=0; j<machines[i].length; j++) {
 
-                resolveInstance(jobs[i], machines[i][j]);
+                resolveInstance(jobs[i], machines[i][j], iteration, ant);
             }
         }
     }
 
-    public void resolveInstance(int job, int machine) {
+    public void resolveInstance(int job, int machine, int iteration, int ant) {
 
         String fileName = getFileName(job, machine);
 
@@ -47,8 +47,8 @@ public class TestPaper {
                 double t0 = Math.pow((instance.getNumberOfJobs() * instance.getUpperBound()), -1);
 
                 ACSFlowShop acsFlowShop = new ACSFlowShop(instance.getNumberOfMachines(), instance.getNumberOfJobs(), instance.getInstance())
-                        .iteration(5000)
-                        .ant(20)
+                        .iteration(iteration)
+                        .ant(ant)
                         .a(0.1)
                         .B(2)
                         .p(0.1)
@@ -57,13 +57,17 @@ public class TestPaper {
                         .t(ACSFlowShopHelper.createPhoromone(instance.getNumberOfJobs(), t0))
                         .path(ACSFlowShopHelper.createPath(instance.getInstance()));
 
-                double cost = acsFlowShop.solve();
+                int cost = acsFlowShop.solve();
 
                 double duration = System.currentTimeMillis() - initTime;
 
-                double quality = ((cost - instance.getLowerBound()) / instance.getLowerBound());
-
-                Log.info(String.format("%d %s-%d %.4f %.2f", count, fileName.split("\\.")[0], i+1, quality, duration/1000.0));
+                Log.info(String.format("%d %s-%d %d %d %d %.2f",
+                        count,
+                        fileName.split("\\.")[0], i+1,
+                        cost,
+                        instance.getLowerBound(),
+                        instance.getUpperBound(),
+                        duration/1000.0));
             }
         }
     }
