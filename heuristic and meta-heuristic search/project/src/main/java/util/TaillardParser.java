@@ -1,4 +1,6 @@
-package acsflowshop;
+package util;
+
+import acsflowshop.TaillardInstance;
 
 import java.io.BufferedReader;
 import java.io.IOException;
