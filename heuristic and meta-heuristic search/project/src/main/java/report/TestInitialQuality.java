@@ -7,6 +7,11 @@ public class TestInitialQuality {
 
     public static void main(String... args) {
 
-        //new TestPaper().execute(1, 1);
+        TestPaper testPaper = new TestPaper()
+                .iteration(1)
+                .ant(1)
+                .maxTrial(1);
+
+        testPaper.execute();
     }
 }

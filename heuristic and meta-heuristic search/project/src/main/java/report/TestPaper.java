@@ -16,6 +16,10 @@ public class TestPaper {
     private int B = 2;
     private double p = 0.1;
     private double q0 = 0.9;
+    private int maxTrial = 5;
+
+    private int[] jobs = {20, 50, 100, 200, 500};
+    private int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
 
     public TestPaper iteration(int iteration) {
         this.iteration = iteration;
@@ -47,10 +51,12 @@ public class TestPaper {
         return this;
     }
 
-    public void execute() {
+    public TestPaper maxTrial(int maxTrial) {
+        this.maxTrial = maxTrial;
+        return this;
+    }
 
-        int[] jobs = {20, 50, 100, 200, 500};
-        int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
+    public void execute() {
 
         for (int i=0; i<jobs.length; i++) {
 
@@ -69,7 +75,7 @@ public class TestPaper {
 
         for (int i=0; i<instances.size(); i++) {
 
-            for (int count=1; count<=5; count++) {
+            for (int count=1; count<=maxTrial; count++) {
 
                 TaillardInstance instance = instances.get(i);
 
@@ -89,13 +95,13 @@ public class TestPaper {
                         .t(ACSFlowShopHelper.createPhoromone(instance.getNumberOfJobs(), t0))
                         .path(ACSFlowShopHelper.createPath(instance.getInstance()));
 
-                int cost = acsFlowShop.solve();
+                double cost = acsFlowShop.solve();
 
                 double duration = System.currentTimeMillis() - initTime;
 
-                Log.info(String.format("%d %s-%d %d %d %d %.4f %.2f",
+                Log.info(String.format("%d %s %.2f %d %d %.5f %.2f",
                         count,
-                        fileName.split("\\.")[0], i + 1,
+                        fileName.split("\\.")[0],
                         cost,
                         instance.getLowerBound(),
                         instance.getUpperBound(),
@@ -105,7 +111,15 @@ public class TestPaper {
         }
     }
 
-    private String getFileName(int job, int machine) {
+    public int[][] getMachines() {
+        return machines;
+    }
+
+    public int[] getJobs() {
+        return jobs;
+    }
+
+    public String getFileName(int job, int machine) {
         return "tai" + job + "_" + machine + ".txt";
     }
 }
