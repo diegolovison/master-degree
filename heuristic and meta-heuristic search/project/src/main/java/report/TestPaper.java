@@ -21,6 +21,10 @@ public class TestPaper {
     private int[] jobs = {20, 50, 100, 200, 500};
     private int[][] machines = {{5, 10, 20}, {5, 10, 20}, {5, 10, 20}, {10, 20}, {20}};
 
+    private boolean enablePheromoneTrail = true;
+    private boolean enableLocalUpdatePheromone = true;
+    private boolean enableGlobalUpdatePheromone = true;
+
     public TestPaper iteration(int iteration) {
         this.iteration = iteration;
         return this;
@@ -31,7 +35,7 @@ public class TestPaper {
         return this;
     }
 
-    public TestPaper a(int a) {
+    public TestPaper a(double a) {
         this.a = a;
         return this;
     }
@@ -41,18 +45,33 @@ public class TestPaper {
         return this;
     }
 
-    public TestPaper p(int p) {
+    public TestPaper p(double p) {
         this.p = p;
         return this;
     }
 
-    public TestPaper q0(int q0) {
+    public TestPaper q0(double q0) {
         this.q0 = q0;
         return this;
     }
 
     public TestPaper maxTrial(int maxTrial) {
         this.maxTrial = maxTrial;
+        return this;
+    }
+
+    public TestPaper enablePheromoneTrail(boolean enablePheromoneTrail) {
+        this.enablePheromoneTrail = enablePheromoneTrail;
+        return this;
+    }
+
+    public TestPaper enableLocalUpdatePheromone(boolean enableLocalUpdatePheromone) {
+        this.enableLocalUpdatePheromone = enableLocalUpdatePheromone;
+        return this;
+    }
+
+    public TestPaper enableGlobalUpdatePheromone(boolean enableGlobalUpdatePheromone) {
+        this.enableGlobalUpdatePheromone = enableGlobalUpdatePheromone;
         return this;
     }
 
@@ -93,7 +112,10 @@ public class TestPaper {
                         .q0(q0)
                         .t0(t0)
                         .t(ACSFlowShopHelper.createPhoromone(instance.getNumberOfJobs(), t0))
-                        .path(ACSFlowShopHelper.createPath(instance.getInstance()));
+                        .path(ACSFlowShopHelper.createPath(instance.getInstance()))
+                        .enablePheromoneTrail(enablePheromoneTrail)
+                        .enableLocalUpdatePheromone(enableLocalUpdatePheromone)
+                        .enableGlobalUpdatePheromone(enableGlobalUpdatePheromone);
 
                 double cost = acsFlowShop.solve();
 

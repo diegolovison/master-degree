@@ -21,6 +21,10 @@ public class ACSFlowShop {
     private double[][] t;
     private double[] path;
 
+    private boolean enablePheromoneTrail = true;
+    private boolean enableLocalUpdatePheromone = true;
+    private boolean enableGlobalUpdatePheromone = true;
+
     public ACSFlowShop(int numberOfMachines, int numberOfJobs, int[][] instance) {
 
         this.numberOfMachines = numberOfMachines;
@@ -71,6 +75,21 @@ public class ACSFlowShop {
 
     public ACSFlowShop iteration(int iteration) {
         this.iteration = iteration;
+        return this;
+    }
+
+    public ACSFlowShop enablePheromoneTrail(boolean enablePheromoneTrail) {
+        this.enablePheromoneTrail = enablePheromoneTrail;
+        return this;
+    }
+
+    public ACSFlowShop enableLocalUpdatePheromone(boolean enableLocalUpdatePheromone) {
+        this.enableLocalUpdatePheromone = enableLocalUpdatePheromone;
+        return this;
+    }
+
+    public ACSFlowShop enableGlobalUpdatePheromone(boolean enableGlobalUpdatePheromone) {
+        this.enableGlobalUpdatePheromone = enableGlobalUpdatePheromone;
         return this;
     }
 
@@ -159,13 +178,16 @@ public class ACSFlowShop {
 
     private void globalUpdatePheromone(boolean[][] bestLocalPath, int cmax) {
 
-        for (int i=0; i<numberOfJobs;i++) {
-            for (int j=0; j<numberOfJobs; j++) {
+        if (enablePheromoneTrail && enableGlobalUpdatePheromone) {
 
-                if (bestLocalPath[i][j]) {
-                    t[i][j] = ((1 - a) * t[i][j]) + (a * (Math.pow(cmax, -1)));
-                } else {
-                    t[i][j] = ((1 - a) * t[i][j]);
+            for (int i=0; i<numberOfJobs;i++) {
+                for (int j=0; j<numberOfJobs; j++) {
+
+                    if (bestLocalPath[i][j]) {
+                        t[i][j] = ((1 - a) * t[i][j]) + (a * (Math.pow(cmax, -1)));
+                    } else {
+                        t[i][j] = ((1 - a) * t[i][j]);
+                    }
                 }
             }
         }
@@ -173,7 +195,10 @@ public class ACSFlowShop {
 
     private void localUpdatePheromone(int i, int j) {
 
-        t[i][j] = (1 - p) * t[i][j] + (p * t0);
+        if (enablePheromoneTrail && enableLocalUpdatePheromone) {
+
+            t[i][j] = (1 - p) * t[i][j] + (p * t0);
+        }
     }
 
     private int getNext(int i, List<Integer> unvisitedJobs) {
